@@ -7,18 +7,21 @@ from argparse import ArgumentParser
 
 from sensor_msgs.msg import Imu
 from am_post_processing_cloud import BNO055
-
+# t
 msg = Imu()
 rospy.init_node('BNO055_imu', anonymous=True)
 pub_imu = rospy.Publisher('BNO055_imu', Imu, queue_size=100)
 
 parser = ArgumentParser()
-parser.add_argument('-p','--port', action='store',help='Ip address of target', default='/dev/ttyUSB4')
-parser.add_argument('-f','--frequency', action='store',type=str,help='Frequency', default=60)
-parser.add_argument('-A','--accelerometer', action='store_true', default=False)
-parser.add_argument('-G','--gyroscope', action='store_true', default=False)
-parser.add_argument('-E','--euler', action='store_true', default=True)
-arg = parser.parse_args(rospy.myargv()[1:]) #handle roslaunch args
+parser.add_argument('-p', '--port', action='store',
+                    help='Ip address of target', default='/dev/ttyUSB4')
+parser.add_argument('-f', '--frequency', action='store',
+                    type=str, help='Frequency', default=60)
+parser.add_argument('-A', '--accelerometer',
+                    action='store_true', default=False)
+parser.add_argument('-G', '--gyroscope', action='store_true', default=False)
+parser.add_argument('-E', '--euler', action='store_true', default=True)
+arg = parser.parse_args(rospy.myargv()[1:])  # handle roslaunch args
 
 rate = rospy.Rate(arg.frequency)
 time.sleep(5)
@@ -28,7 +31,8 @@ while not rospy.is_shutdown():
         bno = BNO055.BNO055(serial_port=arg.port)
         # Initialize the BNO055 and stop if something went wrong.2
         if not bno.begin():
-            raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
+            raise RuntimeError(
+                'Failed to initialize BNO055! Is the sensor connected?')
         status, self_test, error = bno.get_system_status()
         # Print system status and self test result.
         print('System status: {0}'.format(status))
@@ -54,39 +58,38 @@ while not rospy.is_shutdown():
     time.sleep(3)
 
 
-
 def toQuaternion(pitch, roll, yaw):
-    cy = np.cos(yaw * 0.5);
-    sy = np.sin(yaw * 0.5);
-    cr = np.cos(roll * 0.5);
-    sr = np.sin(roll * 0.5);
-    cp = np.cos(pitch * 0.5);
-    sp = np.sin(pitch * 0.5);
+    cy = np.cos(yaw * 0.5)
+    sy = np.sin(yaw * 0.5)
+    cr = np.cos(roll * 0.5)
+    sr = np.sin(roll * 0.5)
+    cp = np.cos(pitch * 0.5)
+    sp = np.sin(pitch * 0.5)
 
     w = cy*cr*cp+sy*sr*sp
     x = cy*sr*cp-sy*cr*sp
     y = cy*cr*sp+sy*sr*cp
     z = sy*cr*cp-cy*sr*sp
-    return (w,x,y,z)
+    return (w, x, y, z)
 
 
 while not rospy.is_shutdown():
     #heading, roll, pitch = bno.read_euler()
     #w,x,y,z = toQuaternion(pitch, roll, heading)
-    if(arg.euler):
-        x,y,z,w = bno.read_quaternion()
+    if (arg.euler):
+        x, y, z, w = bno.read_quaternion()
         msg.orientation.w = w
         msg.orientation.x = x
         msg.orientation.y = y
         msg.orientation.z = z
 
-    if(arg.accelerometer):
+    if (arg.accelerometer):
         ax, ay, az = bno.read_accelerometer()
         msg.linear_acceleration.x = ax
         msg.linear_acceleration.y = ay
         msg.linear_acceleration.z = az
 
-    if(arg.gyroscope):
+    if (arg.gyroscope):
         gx, gy, gz = bno.read_gyroscope()
         msg.angular_velocity.x = gx
         msg.angular_velocity.y = gy
